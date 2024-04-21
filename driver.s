@@ -6,7 +6,7 @@
    .data
 szInFile:	.asciz "input.txt"
 szOutFile:	.asciz "output.txt"
-szTitle:	.asciz "\t\t\tRASM4 TEXT EDITOR\n"
+szTitle:	.asciz "\n\t\t\tRASM4 TEXT EDITOR\n"
 szDataHeap:	.asciz "\t\tData Structure Heap Memory Consumption: "
 szBytes:	.asciz " bytes\n"
 szNumNodes:	.asciz "\t\tNumber of Nodes: "
@@ -15,11 +15,12 @@ szOptions2:	.asciz "\n\n<4> Edit string. Given an index #, replace old string w/
 szOptions3:	.asciz "\n\n<6> Save File (outpt.txt)\n\n<7> Quit\n\n"
 szInput:	.asciz "Input: "
 szChoice1:	.asciz "You chose option 1\n\n"
-szChoice2_a:	.asciz "You chose option 2a\n\n"
-szChoice2_b:	.asciz "You chose option 2b\n\n"
+szChoice2a:	.asciz "You chose option 2a\n\n"
+szChoice2b:	.asciz "You chose option 2b\n\n"
 szChoice3:	.asciz "You chose option 3\n\n"
 szChoice4:	.asciz "You chose option 4\n\n"
 szInvalid:	.asciz "Please enter a valid option: "
+szEntry:	.asciz "Enter a string: "
 
 dbByte:		.quad 0
 chChoice:	.byte 0x00
@@ -131,6 +132,7 @@ choice_two_a:
    ldr	x0,=szChoice2a
    bl	putstring
 
+   bl	user_insert
    b	_start
 
 choice_two_b:
@@ -176,6 +178,75 @@ traverse_top:
 traverse_exit:
    ldr	x30,[SP], #16
    ldr	x19,[SP], #16
+   RET	LR
+
+user_insert:
+   str	x0,[SP, #-16]!
+   str	x1,[SP, #-16]!
+   str	x2,[SP, #-16]!
+   str	x30,[SP, #-16]!
+
+   mov	x0,NODE_SIZE
+   bl	malloc
+
+   ldr	x1,=newNodePtr
+   str	x0,[x1]
+
+   ldr	x0,=szEntry
+   bl	putstring
+
+   ldr	x0,=szBuffer
+   mov	x1,MAX_LEN
+
+   bl	getstring
+
+   ldr	x0,=szBuffer
+   bl	String_copy
+
+   ldr	x1,=newNodePtr
+   ldr	x1,[x1]
+
+   str	x0,[x1]
+
+   ldr	x1,=newNodePtr
+   ldr	x1,[x1]
+
+   ldr	x0,=headPtr
+   ldr	x0,[x0]
+   cmp	x0,#0
+   bne	insert
+
+   ldr	x0,=headPtr
+   str	x1,[x0]
+
+   b	User_input_exit
+
+insert:
+   ldr	x0,=headPtr
+   ldr	x0,[x0]
+   add	x0,x0,#8
+insert_loop:
+   //add	x0,x0,#8
+   ldr	x2,[x0]
+   cmp	x2,#0
+   beq	save
+
+   ldr	x0,[x0]
+   add	x0,x0,#8
+   b	insert_loop
+
+save:
+   str	x1,[x0]
+
+User_input_exit:
+   ldr	x0,=tailPtr
+   str	x1,[x0]
+
+   ldr	x30,[SP], #16
+   ldr	x2,[SP], #16
+   ldr	x1,[SP], #16
+   ldr	x0,[SP], #16
+
    RET	LR
 
    .end
