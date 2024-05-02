@@ -1,5 +1,5 @@
    .equ	NODE_SIZE, 16
-   .equ MAX_LEN, 20
+   .equ MAX_LEN, 29
    .equ R, 00
    .equ	TC_RW, 01102
    .equ	T_RW, 01002
@@ -67,7 +67,7 @@ currentPtr:	.quad 0
 previousPtr:	.quad 0
 searchTermPtr:	.quad 0
 
-szBuffer:	.skip 21
+szBuffer:	.skip 30
 fileBuf:	.skip 512
 
    .text
@@ -952,6 +952,8 @@ line_end:
    //ldr	x2,[x2,#8]
    add	x2,x2,#8
    add	x1,x1,#1
+   ldr	x0,=searchTermPtr
+   ldr	x0,[x0]
    b	search_loop_1
 
 end_search:
