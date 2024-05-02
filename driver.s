@@ -46,6 +46,7 @@ tailPtr:	.quad 0
 
 newNodePtr:	.quad 0
 currentPtr:	.quad 0
+previousPtr:	.quad 0
 
 szBuffer:	.skip 21
 fileBuf:	.skip 512
@@ -58,240 +59,272 @@ _start:
    ldr	x0,=szDataHeap	// display the about of memory used by the program
    bl	putstring
 
-   ldr	x0,=dbByte
+   ldr	x0,=dbByte	// load the number of bytes used to x0
    ldr	x0,[x0]
 
-   ldr	x1,=szBuffer
+   ldr	x1,=szBuffer	// convert the int to ascii characters
    bl	int64asc
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// print the bytes to screen
    bl	putstring
 
-   ldr	x0,=szBytes
+   ldr	x0,=szBytes	// print the word "bytes"
    bl	putstring
 
-   ldr	x0,=szNumNodes
+   ldr	x0,=szNumNodes	// display the number of nodes in the linked list
    bl	putstring
 
-   ldr	x0,=dbNodes
+   ldr	x0,=dbNodes	// load the number of nodes to x0
    ldr	x0,[x0]
 
-   ldr	x1,=szBuffer
+   ldr	x1,=szBuffer	// convert the int to ascii characters
    bl	int64asc
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// print the nodes to screen
    bl	putstring
 
-   ldr	x0,=szOptions1
+   ldr	x0,=szOptions1	// print the first part of the options menu
    bl	putstring
 
-   ldr	x0,=szOptions2
+   ldr	x0,=szOptions2	// print the second part of the options menu
    bl	putstring
 
-   ldr	x0,=szOptions3
+   ldr	x0,=szOptions3	// print the third part of the options menu
    bl	putstring
 
-   ldr	x0,=szInput
+   ldr	x0,=szInput	// print the prompt for the user to pick an option
    bl	putstring
 
 enter:
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// receive the choice from the user
    mov	x1,MAX_LEN
 
    bl	getstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// Compare the input to branch to the correct option
    ldrb	w0,[x0]
    //ldr	x1,=chChoice
    //strb	w0,[x1]
 
    //ldr	x0,=chChoice
    //ldr	x0,[x0]
-   cmp	w0,#'1'
+   cmp	w0,#'1'		// Branch to choice_one if the choice is 1
    beq	choice_one
-   cmp	w0,#'2'
+   cmp	w0,#'2'		// Branch to choice_two if the choice is 2
    beq	choice_two
-   cmp	w0,#'3'
+   cmp	w0,#'3'		// Branch to choice_three if the choice is 3
    beq	choice_three
-   cmp	w0,#'4'
+   cmp	w0,#'4'		// Branch to choice_four if the choice is 4
    beq	choice_four
-   cmp	w0,#'7'
+   cmp	w0,#'7'		// Branch to exit if the choice is 7
    beq	exit
 
-   ldr	x0,=szInvalid
+   ldr	x0,=szInvalid	// Print the message that the input was invalid if not any of these choices
    bl	putstring
 
-   b	enter
+   b	enter		// branch back to enter
 
 choice_one:
-   ldr	x0,=szChoice1
+   ldr	x0,=szChoice1	// print the message that first choice selected
    bl	putstring
 
-   bl	traverse
+   bl	traverse	// branch and link to traverse
 
-   b	_start
+   b	_start		// branch back to the beginning
 
 choice_two:
    //ldr	x0,=szChoice2
    //bl	putstring
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// receive the subchoice for choice 2
    mov	x1,MAX_LEN
 
    bl	getstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// Compare the input to branch to the correct option
    ldrb	w0,[x0]
 
-   cmp	w0, #'a'
+   cmp	w0, #'a'	// Branch to choice_two_a if the choice is a
    beq	choice_two_a
 
-   cmp	w0, #'b'
+   cmp	w0, #'b'	// Branch to choice_two_b if the choice is b
    beq	choice_two_b
 
-   ldr	x0,=szInvalid
+   ldr	x0,=szInvalid	// Print the message that the input was invalid if not any of these choices
    bl	putstring
 
-   b	choice_two
+   b	choice_two	// branch back to beginning of choice_two
 
 choice_two_a:
-   ldr	x0,=szChoice2a
+   ldr	x0,=szChoice2a	// print the message that choice 2a was selected
    bl	putstring
 
-   bl	user_insert
+   bl	user_insert	// branch and link to user_insert
 
-   b	_start
+   b	_start		// branch back to the beginning
 
 choice_two_b:
-   ldr	x0,=szChoice2b
+   ldr	x0,=szChoice2b	// print the message that choice 2b was selected
    bl	putstring
 
-   bl	file_input
+   bl	file_input	// branch and link to file_input
 
-   b	_start
+   b	_start		// branch back to the beginning
 
 choice_three:
-   ldr	x0,=szChoice3
+   ldr	x0,=szChoice3		// print the message that third choice selected
    bl	putstring
 
-   ldr	x0,=szDeleteIndex
+   ldr	x0,=szDeleteIndex	// print the prompt to ask which string to delete
    bl	putstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer		// receive input from user
    mov	x1,MAX_LEN
 
    bl	getstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer		// convert the input from ascii to a 64 bit integer
    bl	ascint64
 
-   bl	delete
+   bl	delete			// branch and link to delete
 
-   b	_start
+   b	_start			// branch back to start
 
 choice_four:
-   ldr	x0,=szChoice4
+   ldr	x0,=szChoice4	// print the message that fourth choice selected
    bl	putstring
 
-   ldr	x0,=szEditIndex
+   ldr	x0,=szEditIndex	// print the prompt to ask which string to edit
    bl	putstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// receive input from user
    mov	x1,MAX_LEN
 
    bl	getstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// convert the input from ascii to a 64 bit integer
    bl	ascint64
 
-   bl	edit
+   bl	edit		// branch and link to edit
 
-   b	_start
+   b	_start		// branch back to start
 
 exit:
    /**** EXIT SEQUENCE ****/
-   mov	x0,#0
-   mov	x8, #93
-   svc	0
+   mov	x0,#0		// Use 0 return code
+   mov	x8, #93		// Service code 93 terminates the program
+   svc	0		// Call Linux to terminate the program
 
 traverse:
-   str	x0,[SP,#-16]!
-   str	x1,[SP,#-16]!
-   str	x19,[SP,#-16]!
-   str	x20,[SP,#-16]!
-   str	x30,[SP,#-16]!
-   ldr	x19,=headPtr
-   mov	x20,#0
-traverse_top:
-   ldr	x19,[x19]
+   str	x0,[SP,#-16]!	// push x0 onto the stack
+   str	x1,[SP,#-16]!	// push x1 onto the stack
+   str	x19,[SP,#-16]!	// push x19 onto the stack
+   str	x20,[SP,#-16]!	// push x20 onto the stack
+   str	x30,[SP,#-16]!	// push x30 onto the stack
 
-   cmp	x19,#0
-   beq	traverse_exit
+   ldr	x19,=headPtr	// load the address of headPtr to x19
+   mov	x20,#0		// copy 0 into x20 to act as the counter
+
+traverse_top:
+   ldr	x19,[x19]	// load the address of the node pointed to by headPtr
+
+   cmp	x19,#0		// compare to see if the node is empty
+   beq	traverse_exit	// branch to traverse_exit if true
 
    //str	x19,[SP,#-16]!
    //str	x20,[SP,#-16]!
 
-   ldr	x0,=chOpenBracket
+   ldr	x0,=chOpenBracket	// Print the open bracket character to screen
    bl	putch
 
    //ldr	x20,[SP], #16
 
-   mov	x0,x20
-   ldr	x1,=szBuffer
+   mov	x0,x20		// copy the value in x20 to x0
+   ldr	x1,=szBuffer	// convert x0 from int 64 to ascii
    bl	int64asc
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// print which node we are on
    bl	putstring
 
-   ldr	x0,=szCloseBracket
+   ldr	x0,=szCloseBracket	// print the close brackets
    bl	putstring
 
-   ldr	x0,[x19]
+   ldr	x0,[x19]	// print the string stored in the node to x0
    bl	putstring
 
-   ldr	x0,=chLF
-   bl	putch
+   // Causes extra lines for file. Find way to add \n to user strings
+   //ldr	x0,=chLF
+   //bl	putch
 
-   add	x20,x20,#1
-   add	x19,x19,#8
-   b	traverse_top
+   add	x20,x20,#1	// increment the counter in x20 by one
+   add	x19,x19,#8	// increment the address in x19 so it points to *next
+   b	traverse_top	// branch back to traverse_top
 
 traverse_exit:
-   ldr	x30,[SP], #16
-   ldr	x20,[SP], #16
-   ldr	x19,[SP], #16
-   ldr	x1,[SP], #16
-   ldr	x0,[SP], #16
-   RET	LR
+   ldr	x30,[SP], #16	// pop x30 off the stack
+   ldr	x20,[SP], #16	// pop x20 off the stack
+   ldr	x19,[SP], #16	// pop x19 off the stack
+   ldr	x1,[SP], #16	// pop x1 off the stack
+   ldr	x0,[SP], #16	// pop x0 off the stack
+
+   RET	LR		// return to the address contained in the link register
 
 user_insert:
-   str	x0,[SP, #-16]!
-   str	x1,[SP, #-16]!
-   str	x2,[SP, #-16]!
-   str	x30,[SP, #-16]!
+   str	x0,[SP, #-16]!	// push x0 onto the stack
+   str	x1,[SP, #-16]!	// push x1 onto the stack
+   str	x2,[SP, #-16]!	// push x2 onto the stack
+   str	x30,[SP, #-16]!	// push x30 onto the stack
 
-   mov	x0,NODE_SIZE
+   mov	x0,NODE_SIZE	// allocate a block of memory of NODE_SIZE bytes
    bl	malloc
 
-   ldr	x1,=newNodePtr
+   ldr	x1,=newNodePtr	// store the address of the allocated memory in newNodePtr
    str	x0,[x1]
 
-   ldr	x0,=szEntry
+   ldr	x0,=szEntry	// Print the prompt to enter a new string
    bl	putstring
 
-   ldr	x0,=szBuffer
+   ldr	x0,=szBuffer	// receive the new string from the user
    mov	x1,MAX_LEN
 
    bl	getstring
 
-   ldr	x0,=szBuffer
-   bl	String_copy
+   ldr	x0,=szBuffer	// get the length of the string
+   //bl	String_copy
+   bl	String_length
+   add	x0,x0,#1	// add one to the length
 
-   ldr	x1,=newNodePtr
-   ldr	x1,[x1]
+   bl	malloc		// allocate a block of memory for the string + \n
 
-   str	x0,[x1]
+   ldr	x1,=newNodePtr	// load newNodePtr to x1
+   ldr	x1,[x1]		// load the address pointed to by newNodePtr to x1
+   //ldr	x1,[x1]
 
-   ldr	x1,=newNodePtr
+   str	x0,[x1]		// store the allocated string memory to the node
+
+   ldr	x1,=newNodePtr	// load the address of newNodePtr
+   ldr	x1,[x1]		// load the address of the node pointed to by newNodePtr
+   ldr	x1,[x1]		// load the address of the allocated string memory
+
+   ldr	x0,=szBuffer	// load szBuffer with the user string in it to x0
+
+copy_loop:
+   ldrb	w2,[x0]		// load a byte of szBuffer to w2
+   cmp	w2,#0		// compare w2 to 0 to see if its a null character
+   beq	end_copy	// branch to end_copy if true
+
+   strb	w2,[x1]		// store a byte from w2 to x1
+
+   add	x0,x0,#1	// increment x0 by 1
+   add	x1,x1,#1	// increment x1 by 1
+
+   b	copy_loop	// branch back to top of copy_loop
+
+end_copy:
+   ldr	x0,=chLF	// load address of chLF to x0
+   ldrb	w2,[x0]		// load a byte from x0 to w2
+   strb	w2,[x1]		// store the line feed character from w2 to x1
+
+   ldr	x1,=newNodePtr	
    ldr	x1,[x1]
 
    ldr	x0,=headPtr
@@ -338,16 +371,13 @@ update_tail:
 
    RET	LR
 
-/*
-   Only adds empty strings to the list. The number of nodes added is correct tho
-*/
 file_input:
-   str	x0,[SP,#-16]!
+   /*str	x0,[SP,#-16]!
    str	x1,[SP,#-16]!
    str	x2,[SP,#-16]!
    str	x3,[SP,#-16]!
-   str	x4,[SP,#-16]!
-   str	x8,[SP,#-16]!
+   str	x4,[SP,#-16]!*/
+   //str	x8,[SP,#-16]!
    str	x30,[SP,#-16]!
 
    mov	x0, #AT_FDCWD
@@ -365,11 +395,23 @@ file_input:
    strb	w0,[x4]
 
 file_top:
+   str	x0,[SP,#-16]!
+   str	x1,[SP,#-16]!
+   str	x2,[SP,#-16]!
+   str	x3,[SP,#-16]!
+   str	x4,[SP,#-16]!
+
    mov	x0,NODE_SIZE	// allocate memory block of NODE_SIZE bytes
    bl	malloc
 
    ldr	x1,=newNodePtr	// store the address of the memory in newNodePtr
    str	x0,[x1]
+
+   ldr	x4,[SP], #16
+   ldr	x3,[SP], #16
+   ldr	x2,[SP], #16
+   ldr	x1,[SP], #16
+   ldr	x0,[SP], #16
 
    ldr	x1,=fileBuf	//
 
@@ -379,6 +421,8 @@ file_top:
 
    ldr	x0,=fileBuf
    bl	String_copy
+
+   //bl	putstring
 
    ldr	x1,=newNodePtr
    ldr	x1,[x1]
@@ -438,7 +482,7 @@ file_last:
    svc	0
 
    ldr	x30,[SP], #16
-   ldr	x8,[SP], #16
+   //ldr	x8,[SP], #16
    ldr	x4,[SP], #16
    ldr	x3,[SP], #16
    ldr	x2,[SP], #16
@@ -563,34 +607,69 @@ free_index:
 
    b	delete_exit
 
+// Redo this so that it keeps track of previous node
 free_tail:
-   ldr	x0,=tailPtr
+   //str	x19,[SP,#-16]!
+   //str	x20,[SP,#-16]!
+
+   /*ldr	x0,=tailPtr
    ldr	x1,[x0]
    ldr	x0,[x1]
-   bl	free
+   bl	free*/
 
-   mov	x0,x1
-   bl	free
+   //mov	x0,x1
+   //bl	free
 
    /* increment to node before what tailPtr was
       and assign that node ot tailPt*/
    //ldr	x19,[x19]
-   sub	x20,x20,#2
-   mov	x21,#0
+   //ldr	x20,[SP],#16
+   //ldr	x19,[SP],#16
+   //sub	x20,x20,#2
+   //mov	x21,#0
+   //ldr	x19,[x19]
 
 find_previous:
    ldr	x19,[x19]
-   cmp	x21,x20
-   bge	move_tail
-
+   ldr	x20,=currentPtr
+   str	x19,[x20]
    add	x19,x19,#8
-   add	x21,x21,#1
+   cmp	x19,#0
+   beq	move_tail
+
+   ldr	x20,=currentPtr
+   ldr	x20,[x20]
+   ldr	x21,=previousPtr
+   str	x19,[x20]
+
+   //ldr	x19,[x19]
+   //ldr	x19,[x19]
+   //add	x21,x21,#1
    b	find_previous
 
 move_tail:
-   ldr	x20,=tailPtr
-   ldr	x19,[x19]
-   str	x19,[x20]
+   //ldr	x0,=tailPtr
+   //ldr	x1,[x0]
+   //add	x1,x1,#8
+
+   ldr	x19,=currentPtr
+   ldr	x0,[x19]
+   bl	free
+
+   mov	x0,x19
+   bl	free
+
+   ldr	x20,=previousPtr
+   ldr	x20,[x20]
+   ldr	x21,=tailPtr
+   //ldr	x19,[x19]
+   str	x20,[x21]
+
+   ldr	x0,=tailPtr
+   ldr	x0,[x0]
+   add	x0,x0,#8
+   mov	x19,#0
+   str	x19,[x0]
 
 delete_exit:
    ldr	x30,[SP],#16
