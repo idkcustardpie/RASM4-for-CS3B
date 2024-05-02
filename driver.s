@@ -1,5 +1,5 @@
    .equ	NODE_SIZE, 16
-   .equ MAX_LEN, 29
+   .equ MAX_LEN, 511
    .equ R, 00
    .equ	TC_RW, 01102
    .equ	T_RW, 01002
@@ -43,6 +43,7 @@ szPar:        	.asciz " \" "
 szBracket1:    	.asciz " ("
 szMsgHit:    	.asciz " hits in "
 szMsgFileOf:    .asciz " files of "
+szNewLine:	.asciz "\n"
 lineCount:    	.quad  0
 fileCount:    	.quad  0
 hitCount:    	.quad  0    // the amount of hits, +1 for line
@@ -67,7 +68,7 @@ currentPtr:	.quad 0
 previousPtr:	.quad 0
 searchTermPtr:	.quad 0
 
-szBuffer:	.skip 30
+szBuffer:	.skip 512
 fileBuf:	.skip 512
 
    .text
@@ -264,59 +265,59 @@ choice_six:
    ldr	x0,=szChoice6     // Load address of szChoice6 into x0
    bl	putstring          // Call putstring to print the string
 
-save_file:
-   ldr	x0, =dbNodes      // Load address of dbNodes into x0
-   ldr	x0, [x0]          // Load value at dbNodes into x0
-   cmp	x0, #0            // Compare x0 with 0
-   beq	save_error        // Branch if equal to save_error
+save_file:               
+	ldr	x0, =dbNodes      // Load address of dbNodes into x0
+	ldr	x0, [x0]          // Load value at dbNodes into x0
+	cmp	x0, #0            // Compare x0 with 0
+	beq	save_error        // Branch if equal to save_error
 
-   ldr	x0, =szFileName    // Load address 
-   bl	putstring          // Call putstring to print the prompt
+	ldr	x0, =szFileName    // Load address 
+	bl	putstring          // Call putstring to print the prompt
 
-   ldr	x0, =fileBuf      // Load address of fileBuf into x0
-   mov	x1, #512          // Load 512 into x1
-   bl	getstring          // Call getstring to get input
+	ldr	x0, =fileBuf      // Load address of fileBuf into x0
+	mov	x1, #512          // Load 512 into x1
+	bl	getstring          // Call getstring to get input
 
-   mov	x0, #AT_FDCWD     // Load local directory into x0
-   mov	x8, #56           // Load Openat command into x8
-   ldr	x1, =fileBuf      // Load address of filename into x1
+	mov	x0, #AT_FDCWD     // Load local directory into x0
+	mov	x8, #56           // Load Openat command into x8
+	ldr	x1, =fileBuf      // Load address of filename into x1
 
-   mov	x2, #TC_RW         // Load C_RW into x2 for file creation
-   mov	x3, #0600         // Load permissions into x3
-   svc	0                 // service call
+	mov	x2, #C_RW         // Load C_RW into x2 for file creation
+	mov	x3, #0600         // Load permissions into x3
+	svc	0                 // service call
 
-   ldr	x1,=iFD           // Load address of iFD into x1
-   strb	w0,[x1]          // Store returned file descriptor in iFD
+	ldr	x1,=iFD           // Load address of iFD into x1
+	strb	w0,[x1]          // Store returned file descriptor in iFD
 
-   ldr	x19, =dbNodes     // Load address of dbNodes into x19
-   ldr	x19, [x19]        // Load number of nodes into x19
-   ldr	x20, =headPtr     // Load address of headPtr into x20
-   ldr	x20, [x20]        // Load address of node into x20
+	ldr	x19, =dbNodes     // Load address of dbNodes into x19
+	ldr	x19, [x19]        // Load number of nodes into x19
+	ldr	x20, =headPtr     // Load address of headPtr into x20
+	ldr	x20, [x20]        // Load address of node into x20
 
-save_loop:
-   ldr	x0, [x20, #0]    // Load address of string into x0
-   bl	String_length      // Call String_length to get string length
-   mov	x11, x0           // Move string length into x11
-   ldr	x10, [x20, #0]   // Load address of string into x10
-   bl	save_string         // Call file_input function
+save_loop:              
+	ldr	x0, [x20, #0]    // Load address of string into x0
+	bl	String_length      // Call String_length to get string length
+	mov	x11, x0           // Move string length into x11
+	ldr	x10, [x20, #0]   // Load address of string into x10
+	bl	save_string         // Call file_input function
 
-   sub	x19, x19, #1      // Subtract number of nodes
-   cmp	x19, #0           // Compare number of nodes with 0
-   beq	save_end          // Branch if equal to save_end
+	sub	x19, x19, #1      // Subtract number of nodes
+	cmp	x19, #0           // Compare number of nodes with 0
+	beq	save_end          // Branch if equal to save_end
 
-   ldr	x20, [x20, #8]   // Load address of next node into x20
-   b	save_loop           // Branch to save_loop
+	ldr	x20, [x20, #8]   // Load address of next node into x20
+	b	save_loop           // Branch to save_loop
 
-save_end:
-   ldr	x0, =szSaveYes    // Load address of successful save into x0
-   bl	putstring         // Call putstring to print the success message
+save_end:             
+	ldr	x0, =szSaveYes    // Load address of successful save into x0
+	bl	putstring         // Call putstring to print the success message
 
-   ldr	x0,=iFD           // Load address of iFD into x0
-   ldrb	w0,[x0]          // Load byte at address of iFD into w0
-   mov	x8, #57           // Load exit code into x8
-   svc	0                 // System call
+	ldr	x0,=iFD           // Load address of iFD into x0
+	ldrb	w0,[x0]          // Load byte at address of iFD into w0
+	mov	x8, #57           // Load exit code into x8
+	svc	0                 // System call
 
-   b	_start              // branch to _start
+	b	_start              // branch to _start
 
 free_memory:
    ldr	x1,=headPtr	// load headPtr to x1
@@ -420,11 +421,11 @@ user_insert:
    bl	getstring
 
    ldr	x0,=szBuffer	// get the length of the string
-   //bl	String_copy
-   bl	String_length
+   bl	String_copy
+   /*bl	String_length
    add	x0,x0,#1	// add one to the length
 
-   bl	malloc		// allocate a block of memory for the string + \n
+   bl	malloc		// allocate a block of memory for the string + \n*/
 
    ldr	x1,=newNodePtr	// load newNodePtr to x1
    ldr	x1,[x1]		// load the address pointed to by newNodePtr to x1
@@ -432,7 +433,7 @@ user_insert:
 
    str	x0,[x1]		// store the allocated string memory to the node
 
-   ldr	x1,=newNodePtr	// load the address of newNodePtr
+   /*ldr	x1,=newNodePtr	// load the address of newNodePtr
    ldr	x1,[x1]		// load the address of the node pointed to by newNodePtr
    ldr	x1,[x1]		// load the address of the allocated string memory
 
@@ -440,10 +441,11 @@ user_insert:
 
 copy_loop:
    ldrb	w2,[x0]		// load a byte of szBuffer to w2
-   cmp	w2,#0		// compare w2 to 0 to see if its a null character
-   beq	end_copy	// branch to end_copy if true
 
    strb	w2,[x1]		// store a byte from w2 to x1
+
+   cmp	w2,#0		// compare w2 to 0 to see if its a null character
+   beq	end_copy	// branch to end_copy if true
 
    add	x0,x0,#1	// increment x0 by 1
    add	x1,x1,#1	// increment x1 by 1
@@ -453,7 +455,7 @@ copy_loop:
 end_copy:
    ldr	x0,=chLF	// load address of chLF to x0
    ldrb	w2,[x0]		// load a byte from x0 to w2
-   strb	w2,[x1]		// store the line feed character from w2 to x1
+   strb	w2,[x1]		// store the line feed character from w2 to x1*/
 
    ldr	x1,=newNodePtr	// load the address of newNodePtr to x1
    ldr	x1,[x1]
@@ -675,10 +677,6 @@ skip:
 
    RET	LR
 
-/*
- When deleting last index, can no longer accept new strings. Not sure why. Tried updating tailPtr but still not working
-*/
-
 delete:
    str	x19,[SP,#-16]!
    str	x20,[SP,#-16]!
@@ -878,10 +876,6 @@ search:
    //add	x1,x1,#6					// x1 to 6 as well
    ldr	x2,=headPtr
 
-// Displaying all strings even when they do not contain the search term!!!!!!!!!
-// !!!!!!!!!!!!!!!!!!!!!!!
-//!!!!!!!!!!!!!!!!!!!!!!!!!!
-//!!!!!!!!!!!!!!!!!!!!!!
 search_loop_1:
    ldr	x2,[x2]
    cmp	x2,#0
@@ -1051,71 +1045,71 @@ print_search:
    b	_start		  // if not, return to start*/
 
 save_string:
-   str	x19, [SP, #-16]!
-   str	x20, [SP, #-16]!
-   str	x21, [SP, #-16]!
-   str	x22, [SP, #-16]!
-   str	x23, [SP, #-16]!
-   str	x24, [SP, #-16]!
-   str	x25, [SP, #-16]!
-   str	x26, [SP, #-16]!
-   str	x27, [SP, #-16]!
-   str	x28, [SP, #-16]!
-   str	x29, [SP, #-16]!
-   str	x30, [SP, #-16]!
-   mov	x29, SP
+	str	x19, [SP, #-16]!
+	str	x20, [SP, #-16]!
+	str	x21, [SP, #-16]!
+	str	x22, [SP, #-16]!
+	str	x23, [SP, #-16]!
+	str	x24, [SP, #-16]!
+	str	x25, [SP, #-16]!
+	str	x26, [SP, #-16]!
+	str	x27, [SP, #-16]!
+	str	x28, [SP, #-16]!
+	str	x29, [SP, #-16]!
+	str	x30, [SP, #-16]!
+	mov	x29, SP
 
-   mov	x0, #AT_FDCWD
-   mov	x8, #56
-   ldr	x1, =fileBuf
+	mov	x0, #AT_FDCWD
+	mov	x8, #56
+	ldr	x1, =fileBuf
 
-   mov	x2, #02002
-   mov	x3, #0600
-   svc	0
+	mov	x2, #02002
+	mov	x3, #0600
+	svc	0
 
-   mov	x8, #64
-   mov	x1, x10
-   mov	x2, x11
-   svc	0
+	mov	x8, #64
+	mov	x1, x10
+	mov	x2, x11
+	svc	0
 
-   mov    x0, #0x0a     // ASCII code for new line character
-   mov    x8, #64       // syscall number for write
-   mov    x2, #1        // length of the string (1 for new line)
-   svc    0
+	mov    x0, #0x0a     // ASCII code for new line character
+	mov    x8, #64       // syscall number for write
+	mov    x2, #1        // length of the string (1 for new line)
+	svc    0
 
-   // Open 
-   /* mov	x0, #AT_FDCWD		// local directory
-   mov	x8, #56 		// Openat
-   ldr	x1, =fileBuf
-   // Create 
-   mov	x2, #02002		// Create 
-   mov	x3, #0600		// permissions
-   svc	0			// service call */
+	// Open 
+	/* mov	x0, #AT_FDCWD		// local directory
+	mov	x8, #56 		// Openat
+	ldr	x1, =fileBuf
+	// Create 
+	mov	x2, #02002		// Create 
+	mov	x3, #0600		// permissions
+	svc	0			// service call */
 
-   // make a new line here!
-
-
-   // restoring preserved registers x19-x30 (AAPACS)
-   ldr	x30, [SP], #16
-   ldr	x29, [SP], #16
-   ldr	x28, [SP], #16
-   ldr	x27, [SP], #16
-   ldr	x26, [SP], #16
-   ldr	x25, [SP], #16
-   ldr	x24, [SP], #16
-   ldr	x23, [SP], #16
-   ldr	x22, [SP], #16
-   ldr	x21, [SP], #16
-   ldr	x20, [SP], #16
-   ldr	x19, [SP], #16	
-
-   // return
-   RET
+	// make a new line here!
 
 
-save_error:
-   ldr	x0, =szSaveError  // Load address save error into x0
-   bl	putstring          // Call putstring to print message
-   b	_start              // branch to _start
+	// restoring preserved registers x19-x30 (AAPACS)
+	ldr	x30, [SP], #16
+	ldr	x29, [SP], #16
+	ldr	x28, [SP], #16
+	ldr	x27, [SP], #16
+	ldr	x26, [SP], #16
+	ldr	x25, [SP], #16
+	ldr	x24, [SP], #16
+	ldr	x23, [SP], #16
+	ldr	x22, [SP], #16
+	ldr	x21, [SP], #16
+	ldr	x20, [SP], #16
+	ldr	x19, [SP], #16	
+
+	// return
+	RET
+
+
+save_error:             
+	ldr	x0, =szSaveError  // Load address save error into x0
+	bl	putstring          // Call putstring to print message
+	b	_start              // branch to _start
 
    .end
